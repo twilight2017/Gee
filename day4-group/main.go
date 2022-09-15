@@ -12,7 +12,7 @@ func onlyForV2() gee.HandlerFunc {
 
 func main() {
 	r := gee.New()
-	r.Use(gee.Logger())
+	r.Use(gee.Logger())  //global middleware
 	r.GET("/", func(c *gee.Context) {
 		c.HTML(http.StatusOK, "<h1>Hello Gee</h1>")
 	})

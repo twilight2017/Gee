@@ -1,28 +1,45 @@
 package main
 
 import (
+	"final/gee"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
+	"time"
 )
 
-//Engine is the uni handler for all requests
-type Engine struct{}
-
-func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	switch req.URL.Path {
-	case "/":
-		fmt.Fprintf(w, "URL.Path = %q\n", req.URL.Path)
-	case "/hello":
-		for k, v := range req.Header {
-			fmt.Fprintf(w, "Header[%q] = %q\n", k, v)
-		}
-	default:
-		fmt.Fprintf(w, "404 NOT FOUND: %s\n", req.URL)
+func onlyForV2() gee.HandlerFunc {
+	return func(c *gee.Context) {
+		//start timer
+		t := time.Now()
+		c.Fatal(500, "Internal Server Error")
+		log.Printf("[%d] %s in %v for group v2", c.StatusCode, c.Req.RequestURI, time.since(t))
 	}
 }
 
+type student struct {
+	Name string
+	Age  int8
+}
+
+func FormatAsDate(t time.Time) string {
+	year, month, day := t.Date()
+	return fmt.Sprintf("%d-%02d-%d", year, month, day)
+}
+
 func main() {
-	engine := new(Engine)
-	log.Fatal(http.ListenAndServe(":9999", engine))
+	r := gee.New()
+	r.Use(gee.Logger())
+	r.SetFuncMap(template.FuncMap{
+		"FormatAsDate": FormatAsDate,
+	})
+	r.LoadHTMLGlob("templates/*")
+	r.Static("/assets", "./static")
+
+	stu1 := &student{Name: "Geektutu", Age: 20}
+	stu2 := &student{Name: "lucy", Age: 22}
+	r.GET("/", func(c *gee.Context) {
+		c.HTML(http.StatusOK, "css.tmpl")
+	})
 }

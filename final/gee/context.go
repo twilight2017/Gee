@@ -26,6 +26,13 @@ type Context struct {
 	engine *Engine
 }
 
+func (c *Context) HTML(code int, name string, data interface{}) {
+	c.SetHeader("Content-type", "text/html")
+	c.Status(code)
+	if err := c.engine.htmlTemplates.ExecuteTemplate(c.Writer, name, data); err != nil {
+		c.Fail(500, err.Error())
+	}
+}
 func newContext(w http.ResponseWriter, req *http.Request) *Context {
 	return &Context{
 		Writer: w,
